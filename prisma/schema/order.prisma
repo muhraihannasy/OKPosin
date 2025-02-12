@@ -1,0 +1,53 @@
+model Order {
+    id             Int          @id @default(autoincrement())
+    uuid           String       @default(uuid())
+    tenant         Tenant       @relation(fields: [tenant_id], references: [id])
+    tenant_id      Int
+    warehouse      Warehouse    @relation(fields: [warehouse_id], references: [id])
+    warehouse_id   Int
+    discount       Discount     @relation(fields: [discount_id], references: [id])
+    discount_id    Int
+    cashier        User         @relation(fields: [cashier_id], references: [id])
+    cashier_id     Int
+    customer       Customer     @relation(fields: [customer_id], references: [id])
+    customer_id    Int
+    customer_type  CustomerType @default(WALK_IN)
+    customer_name  String       @db.VarChar(100)
+    customer_email String       @db.VarChar(50)
+    customer_phone String       @db.VarChar(20)
+    currency       String       @db.VarChar(20)
+    exchange_rate  Decimal      @db.Decimal(10, 2)
+    subtotal       Decimal      @db.Decimal(10, 2)
+    service_charge Decimal      @db.Decimal(10, 2)
+    total          Decimal      @db.Decimal(10, 2)
+    created_at     DateTime     @default(now())
+    updated_at     DateTime     @updatedAt
+    deleted_at     DateTime?
+    OrderItem      OrderItem[]
+
+    @@map("orders")
+}
+
+model OrderItem {
+    id         Int       @id @default(autoincrement())
+    uuid       String    @default(uuid())
+    tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id  Int
+    order      Order     @relation(fields: [order_id], references: [id])
+    order_id   Int
+    item       Item      @relation(fields: [item_id], references: [id])
+    item_id    Int
+    qty        Int
+    price      Decimal   @db.Decimal(10, 2)
+    subtotal   Decimal   @db.Decimal(10, 2)
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    @@map("order_items")
+}
+
+enum CustomerType {
+    CUSTOMER
+    WALK_IN
+}

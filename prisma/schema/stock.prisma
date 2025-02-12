@@ -1,0 +1,47 @@
+model Stock {
+    id           Int       @id @default(autoincrement())
+    uuid         String    @default(uuid())
+    tenant       Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id    Int
+    warehouse    Warehouse @relation(fields: [warehouse_id], references: [id])
+    warehouse_id Int
+    item         Item      @relation(fields: [item_id], references: [id])
+    item_id      Int
+    qty          Int
+    price        Decimal   @db.Decimal(10, 2)
+    subtotal     Decimal   @db.Decimal(10, 2)
+    created_at   DateTime  @default(now())
+    updated_at   DateTime  @updatedAt
+    deleted_at   DateTime?
+
+    stock_logs StockLog[]
+
+    @@map("stocks")
+}
+
+model StockLog {
+    id           Int          @id @default(autoincrement())
+    uuid         String       @default(uuid())
+    tenant       Tenant       @relation(fields: [tenant_id], references: [id])
+    tenant_id    Int
+    user         User         @relation(fields: [user_id], references: [id])
+    user_id      Int
+    stock        Stock        @relation(fields: [stock_id], references: [id])
+    stock_id     Int
+    warehouse    Warehouse    @relation(fields: [warehouse_id], references: [id])
+    warehouse_id Int
+    item         Item         @relation(fields: [item_id], references: [id])
+    item_id      Int
+    type         StockLogType
+    qty          Int
+    created_at   DateTime     @default(now())
+    updated_at   DateTime     @updatedAt
+    deleted_at   DateTime?
+
+    @@map("stock_logs")
+}
+
+enum StockLogType {
+    IN
+    OUT
+}

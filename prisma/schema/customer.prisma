@@ -1,0 +1,14 @@
+model Customer {
+    id         Int       @id @default(autoincrement())
+    uuid       String    @default(uuid())
+    name       String    @db.VarChar(100)
+    email      String    @unique @db.VarChar(50)
+    phone      String    @db.VarChar(20)
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    orders Order[]
+
+    @@map("customers")
+}

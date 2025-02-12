@@ -1,0 +1,34 @@
+model Warehouse {
+    id         Int       @id @default(autoincrement())
+    uuid       String    @default(uuid())
+    tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id  Int
+    name       String    @db.VarChar(100)
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    warehouse_has_discounts WarehouseHasDiscount[]
+    orders                  Order[]
+    stocks                  Stock[]
+    stock_logs              StockLog[]
+
+    @@map("warehouses")
+}
+
+model WarehouseHasDiscount {
+    id           Int       @id @default(autoincrement())
+    uuid         String    @default(uuid())
+    tenant       Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id    Int
+    warehouse    Warehouse @relation(fields: [warehouse_id], references: [id])
+    warehouse_id Int
+    discount     Discount  @relation(fields: [discount_id], references: [id])
+    discount_id  Int
+    is_active    Boolean   @default(false)
+    created_at   DateTime  @default(now())
+    updated_at   DateTime  @updatedAt
+    deleted_at   DateTime?
+
+    @@map("warehouse_has_discounts")
+}

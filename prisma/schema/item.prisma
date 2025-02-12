@@ -1,0 +1,110 @@
+model Item {
+    id               Int          @id @default(autoincrement())
+    uuid             String       @default(uuid())
+    tenant           Tenant       @relation(fields: [tenant_id], references: [id])
+    tenant_id        Int
+    item_category    ItemCategory @relation(fields: [item_category_id], references: [id])
+    item_category_id Int
+    parent           Item?        @relation("ItemParent", fields: [parent_id], references: [id])
+    parent_id        Int
+    sequence         Int          @default(1)
+    name             String       @db.VarChar(100)
+    sku              String       @db.VarChar(50)
+    cost             Decimal      @db.Decimal(10, 2)
+    price            Decimal      @db.Decimal(10, 2)
+    created_at       DateTime     @default(now())
+    updated_at       DateTime     @updatedAt
+    deleted_at       DateTime?
+
+    children            Item[]             @relation("ItemParent")
+    item_images         ItemImage[]
+    item_attributes     ItemAttribute[]
+    item_has_attributes ItemHasAttribute[]
+    order_items         OrderItem[]
+    stocks              Stock[]
+    stock_logs          StockLog[]
+
+    @@map("items")
+}
+
+model ItemCategory {
+    id         Int       @id @default(autoincrement())
+    uuid       String    @default(uuid())
+    tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id  Int
+    name       String    @db.VarChar(100)
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    items Item[]
+
+    @@map("item_categories")
+}
+
+model ItemImage {
+    id         Int           @id @default(autoincrement())
+    uuid       String        @default(uuid())
+    item       Item          @relation(fields: [item_id], references: [id])
+    item_id    Int
+    sequence   Int
+    type       ItemImageType @default(GALERY)
+    path       String
+    created_at DateTime      @default(now())
+    updated_at DateTime      @updatedAt
+    deleted_at DateTime?
+
+    @@map("item_images")
+}
+
+model ItemAttribute {
+    id         Int       @id @default(autoincrement())
+    uuid       String    @default(uuid())
+    tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+    tenant_id  Int
+    item       Item?     @relation(fields: [item_id], references: [id])
+    item_id    Int?
+    name       String
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    item_attribute_values ItemAttributeValue[]
+
+    @@map("item_attributes")
+}
+
+model ItemAttributeValue {
+    id                Int           @id @default(autoincrement())
+    uuid              String        @default(uuid())
+    item_attribute    ItemAttribute @relation(fields: [item_attribute_id], references: [id])
+    item_attribute_id Int
+    name              String
+    created_at        DateTime      @default(now())
+    updated_at        DateTime      @updatedAt
+    deleted_at        DateTime?
+
+    item_has_attributes ItemHasAttribute[]
+
+    @@map("item_attribute_values")
+}
+
+model ItemHasAttribute {
+    id                      Int                @id @default(autoincrement())
+    uuid                    String             @default(uuid())
+    variant                 Item               @relation(fields: [variant_Id], references: [id])
+    variant_Id              Int
+    item_attribute_value    ItemAttributeValue @relation(fields: [item_attribute_value_id], references: [id])
+    item_attribute_value_id Int
+    name                    String
+    created_at              DateTime           @default(now())
+    updated_at              DateTime           @updatedAt
+    deleted_at              DateTime?
+
+    @@map("item_has_attributes")
+}
+
+enum ItemImageType {
+    PRIMARY
+    GALERY
+}

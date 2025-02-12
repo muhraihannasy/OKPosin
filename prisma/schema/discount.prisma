@@ -1,0 +1,24 @@
+model Discount {
+    id         Int          @id @default(autoincrement())
+    uuid       String       @default(uuid())
+    tenant     Tenant       @relation(fields: [tenant_id], references: [id])
+    tenant_id  Int
+    name       String       @db.VarChar(100)
+    type       DiscountType @default(FIXED)
+    amount     Decimal      @db.Decimal(10, 2)
+    from_date  DateTime?
+    to_date    DateTime?
+    created_at DateTime     @default(now())
+    updated_at DateTime     @updatedAt
+    deleted_at DateTime?
+
+    warehouse_has_discounts WarehouseHasDiscount[]
+    orders                  Order[]
+
+    @@map("discounts")
+}
+
+enum DiscountType {
+    FIXED
+    PERCENTAGE
+}
