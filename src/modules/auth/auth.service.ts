@@ -29,12 +29,11 @@ export class AuthService {
   ) {}
 
   async login(payload: LoginDTO) {
-    const user = (await this.userService.findByEmail(payload.email)) ?? '';
+    const user = await this.userService.findByEmail(payload.email);
 
-    const isPasswordValid = await this.verifyPassword(
-      payload.password,
-      user.password,
-    );
+    const isPasswordValid = user
+      ? await this.verifyPassword(payload.password, user.password)
+      : false;
 
     if (user == null || !isPasswordValid)
       throw new UnauthorizedException(createResponse(null, 'Unauthorized'));
