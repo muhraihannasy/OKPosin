@@ -9,11 +9,20 @@ export class TenantService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createTenantDto: CreateTenantDTO) {
+    const lastTenant = await this.prisma.tenant.findFirst({
+      orderBy: {
+        id: 'desc',
+      },
+      take: 1,
+    });
+
+    const sequence = lastTenant !== null ? lastTenant?.sequence + 1 : 1;
+
     const payload = {
       ...createTenantDto,
-      code: await this.generateCode(),
+      code: await this.generateCode(sequence),
+      sequence,
     };
-
     console.log(payload);
 
     const tenant = await this.prisma.tenant.create({
@@ -39,15 +48,8 @@ export class TenantService {
     return `This action removes a #${id} tenant`;
   }
 
-  async generateCode() {
-    const lastTenant = await this.prisma.tenant.findFirst({
-      orderBy: {
-        id: 'desc',
-      },
-      take: 1,
-    });
-
-    const code = generateSequentialCode(1, 'OKPOSIN', 6);
+  async generateCode(sequence: number) {
+    const code = generateSequentialCode(sequence, 'OKPOSIN', 6);
 
     return code;
   }

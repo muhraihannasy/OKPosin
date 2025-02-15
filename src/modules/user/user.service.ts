@@ -1,13 +1,30 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/common/modules/prisma/prisma.service';
+import { AuthService } from '../auth/auth.service';
+import { CreateUserDTO } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
 
-  create(createUserDto: CreateUserDto) {}
+    private readonly prisma: PrismaService,
+  ) {}
+
+  async create(createUserDto: CreateUserDTO) {
+    const password = await this.authService.hashPassword(
+      createUserDto.password,
+    );
+
+    return await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        password,
+      },
+    });
+  }
 
   findAll() {
     return `This action returns all user`;

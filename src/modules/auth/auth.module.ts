@@ -7,6 +7,7 @@ import { TenantModule } from '../tenant/tenant.module';
 @Module({
   controllers: [AuthController],
   providers: [AuthService],
+  exports: [AuthService],
   imports: [forwardRef(() => UserModule), forwardRef(() => TenantModule)],
 })
 export class AuthModule {}

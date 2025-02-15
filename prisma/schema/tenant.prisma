@@ -1,6 +1,7 @@
 model Tenant {
     id             Int       @id @default(autoincrement())
     uuid           String    @default(uuid())
+    sequence       Int       @default(1)
     name           String    @db.VarChar(100)
     code           String    @db.VarChar(50)
     address        String    @db.Text()

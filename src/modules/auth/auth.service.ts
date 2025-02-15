@@ -5,14 +5,21 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { LoginDTO } from './dto/login.dto';
+
+import * as bcrypt from 'bcrypt';
+
 import { createResponse } from 'src/common/utils/response.util';
-import { RegisterDTO } from './dto/register.dto';
+
 import { TenantService } from '../tenant/tenant.service';
+import { UserService } from '../user/user.service';
+
+import { LoginDTO } from './dto/login.dto';
+import { RegisterDTO } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly SALT_ROUND = 12;
+
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
@@ -22,9 +29,14 @@ export class AuthService {
   ) {}
 
   async login(payload: LoginDTO) {
-    const user = await this.userService.findByEmail(payload.email);
+    const user = (await this.userService.findByEmail(payload.email)) ?? '';
 
-    if (user == null)
+    const isPasswordValid = await this.verifyPassword(
+      payload.password,
+      user.password,
+    );
+
+    if (user == null || !isPasswordValid)
       throw new UnauthorizedException(createResponse(null, 'Unauthorized'));
 
     return {
@@ -53,9 +65,25 @@ export class AuthService {
       address: payload.tenant_address,
     });
 
-    // const user = await this.userService.create(payload);
+    let user = await this.userService.create({
+      name: payload.name,
+      tenant_id: tenant.id,
+      phone: payload.phone,
+      email: payload.email,
+      password: payload.password,
+    });
 
-    // return createResponse(user, null);
+    const { name, phone, email, created_at } = user;
+
+    return createResponse(
+      {
+        name,
+        phone,
+        email,
+        created_at,
+      },
+      null,
+    );
   }
 
   async forgotPassword() {}
@@ -63,4 +91,15 @@ export class AuthService {
   async resetPassword() {}
 
   async me() {}
+
+  async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(this.SALT_ROUND);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    return hashedPassword;
+  }
+
+  async verifyPassword(password: string, hashedPassword: string) {
+    return await bcrypt.compare(password, hashedPassword);
+  }
 }
