@@ -1,10 +1,18 @@
 import {
   BadRequestException,
   forwardRef,
+  Get,
+  HttpCode,
   Inject,
   Injectable,
+  Request,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
+
+import { JwtService } from '@nestjs/jwt';
+
+import { AuthGuard } from '@nestjs/passport';
 
 import * as bcrypt from 'bcrypt';
 
@@ -15,6 +23,7 @@ import { UserService } from '../user/user.service';
 
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -26,19 +35,20 @@ export class AuthService {
 
     @Inject(forwardRef(() => TenantService))
     private readonly tenantService: TenantService,
+
+    private jwtService: JwtService,
   ) {}
 
-  async login(payload: LoginDTO) {
-    const user = await this.userService.findByEmail(payload.email);
+  async login(payload: User) {
+    const payload_user = {
+      sub: payload.id,
+      email: payload.email,
+    };
 
-    const isPasswordValid = user
-      ? await this.verifyPassword(payload.password, user.password)
-      : false;
-
-    if (user == null || !isPasswordValid)
-      throw new UnauthorizedException(createResponse(null, 'Unauthorized'));
+    const access_token = await this.jwtService.sign(payload_user);
 
     return {
+      access_token,
       status: 200,
     };
   }
@@ -89,7 +99,25 @@ export class AuthService {
 
   async resetPassword() {}
 
-  async me() {}
+  // @UseGuards(AuthGuard)
+
+  async me(req: Request) {
+    return req;
+  }
+
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.userService.findByEmail(email);
+
+    const isPasswordValid = user
+      ? await this.verifyPassword(pass, user.password)
+      : false;
+
+    if (user == null || !isPasswordValid) return null;
+
+    const { password, ...result } = user;
+
+    return result;
+  }
 
   async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt(this.SALT_ROUND);
