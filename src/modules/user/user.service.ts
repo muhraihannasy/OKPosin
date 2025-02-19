@@ -1,8 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/common/modules/prisma/prisma.service';
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from '../auth/service//auth.service';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { BcryptService } from '../auth/service/bcrypt.service';
 
 @Injectable()
 export class UserService {
@@ -10,11 +11,14 @@ export class UserService {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
 
+    @Inject(forwardRef(() => BcryptService))
+    private readonly bcryptService: BcryptService,
+
     private readonly prisma: PrismaService,
   ) {}
 
   async create(createUserDto: CreateUserDTO) {
-    const password = await this.authService.hashPassword(
+    const password = await this.bcryptService.hashPassword(
       createUserDto.password,
     );
 

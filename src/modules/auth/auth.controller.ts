@@ -8,14 +8,12 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth/service/auth.service';
 import { ZodPipe } from 'src/common/pipe/zod/zod.pipe';
 
-import { LoginSchema } from './schema/login.schema';
 import { RegisterSchema } from './schema/register.schema';
-import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { LocalAuthGuard } from './local-auth.guard';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { LocalAuthGuard } from './guard/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -44,8 +42,6 @@ export class AuthController {
   @Get('me')
   @HttpCode(200)
   me(@Request() req) {
-    // this.authService.me(req);
-
     return req.user;
   }
 

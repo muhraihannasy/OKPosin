@@ -1,34 +1,22 @@
 import {
   BadRequestException,
   forwardRef,
-  Get,
-  HttpCode,
   Inject,
   Injectable,
-  Request,
-  UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
-
-import { JwtService } from '@nestjs/jwt';
-
-import { AuthGuard } from '@nestjs/passport';
-
-import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 import { createResponse } from 'src/common/utils/response.util';
 
-import { TenantService } from '../tenant/tenant.service';
-import { UserService } from '../user/user.service';
+import { JwtService } from '@nestjs/jwt';
+import { TenantService } from '../../tenant/tenant.service';
+import { UserService } from '../../user/user.service';
+import { BcryptService } from './bcrypt.service';
 
-import { LoginDTO } from './dto/login.dto';
-import { RegisterDTO } from './dto/register.dto';
-import { User } from '@prisma/client';
+import { RegisterDTO } from '../dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  private readonly SALT_ROUND = 12;
-
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
@@ -37,6 +25,8 @@ export class AuthService {
     private readonly tenantService: TenantService,
 
     private jwtService: JwtService,
+
+    private bcryptService: BcryptService,
   ) {}
 
   async login(payload: User) {
@@ -105,11 +95,13 @@ export class AuthService {
     return req;
   }
 
+  async currentUser() {}
+
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
 
     const isPasswordValid = user
-      ? await this.verifyPassword(pass, user.password)
+      ? await this.bcryptService.verifyPassword(pass, user.password)
       : false;
 
     if (user == null || !isPasswordValid) return null;
@@ -117,16 +109,5 @@ export class AuthService {
     const { password, ...result } = user;
 
     return result;
-  }
-
-  async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(this.SALT_ROUND);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    return hashedPassword;
-  }
-
-  async verifyPassword(password: string, hashedPassword: string) {
-    return await bcrypt.compare(password, hashedPassword);
   }
 }
